@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Philippine Digital Voting Platform</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-text-primary:    #111827;
+      --color-text-secondary:  #6b7280;
+      --color-border-tertiary: #e5e7eb;
+      --color-border-secondary:#d1d5db;
+      --border-radius-lg: 16px;
+      --border-radius-md:  8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f3f4f6; color: var(--color-text-primary); }
+
+    .screen        { display: none; }
+    .screen.active { display: block; }
+
+    .nav        { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #fff; border-bottom: .5px solid var(--color-border-tertiary); flex-wrap: wrap; }
+    .nav-brand  { font-weight: 600; font-size: 15px; color: #0d3b66; margin-right: auto; }
+    .nav-tabs   { display: flex; gap: 4px; }
+    .nav-tab    { background: none; border: none; font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 20px; font-family: inherit; color: var(--color-text-secondary); }
+    .nav-tab.active { background: #0d3b66; color: #fff; }
+
+    .hero    { background: linear-gradient(135deg, #0d3b66 0%, #1a5276 100%); color: #fff; padding: 2.5rem 1.5rem; text-align: center; }
+    .hero h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .hero p  { font-size: 14px; opacity: .85; margin-bottom: 1.25rem; }
+
+    .btn-primary { background: #fff; color: #0d3b66; border: none; padding: 10px 22px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; margin: 4px; font-family: inherit; }
+    .btn-outline { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,.6); padding: 10px 22px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; margin: 4px; font-family: inherit; }
+
+    .section      { padding: 1.25rem; }
+    .section-title { font-size: 16px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px; }
+    .section-sub   { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1rem; }
+
+    .candidates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+
+    .candidate-card        { background: #fff; border-radius: 12px; border: 1.5px solid var(--color-border-tertiary); cursor: pointer; transition: border-color .15s, box-shadow .15s; overflow: hidden; }
+    .candidate-card:hover  { border-color: #0d3b66; box-shadow: 0 2px 8px rgba(13,59,102,.1); }
+    .candidate-card.selected { border-color: #0d3b66; background: #e8f0fa; box-shadow: 0 2px 8px rgba(13,59,102,.15); }
+
+    .avatar     { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: #fff; overflow: hidden; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .card-body      { padding: 8px 10px 10px; }
+    .cand-name      { font-size: 12px; font-weight: 600; color: var(--color-text-primary); line-height: 1.3; margin-bottom: 3px; }
+    .cand-party     { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+    .selected-badge { margin-top: 5px; font-size: 10px; color: #1e40af; font-weight: 600; }
+
+    .type-badge  { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
+    .type-senate { background: #dbeafe; color: #1e40af; }
+    .type-house  { background: #fef3c7; color: #92400e; }
+    .count-badge { background: rgba(255,255,255,.25); border-radius: 20px; padding: 1px 7px; font-size: 11px; margin-left: 4px; }
+    .nav-tab.active .count-badge { background: rgba(255,255,255,.3); }
+
+    .search-wrap  { position: relative; margin-bottom: 12px; }
+    .search-input { width: 100%; padding: 9px 12px 9px 36px; border: 1.5px solid var(--color-border-secondary); border-radius: 8px; font-size: 13px; font-family: inherit; outline: none; background: #fff; }
+    .search-input:focus { border-color: #0d3b66; }
+    .search-icon  { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--color-text-secondary); pointer-events: none; }
+    .search-clear { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 16px; display: none; }
+    .no-results   { text-align: center; color: var(--color-text-secondary); font-size: 13px; padding: 2rem; }
+
+    .login-wrap  { max-width: 400px; margin: 2rem auto; background: #fff; border-radius: 16px; padding: 2rem; border: .5px solid var(--color-border-tertiary); }
+    .login-icon  { font-size: 36px; text-align: center; margin-bottom: 8px; }
+    .login-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+    .login-sub   { font-size: 13px; color: var(--color-text-secondary); text-align: center; margin-bottom: 1.25rem; }
+
+    .form-group { margin-bottom: 14px; }
+    .form-label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 5px; }
+    .form-input { width: 100%; padding: 10px 12px; border: 1.5px solid var(--color-border-secondary); border-radius: 8px; font-size: 14px; font-family: inherit; outline: none; }
+    .form-input:focus { border-color: #0d3b66; }
+
+    .login-btn  { width: 100%; padding: 11px; background: #0d3b66; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+    .signup-link { text-align: center; font-size: 13px; color: var(--color-text-secondary); margin-top: 12px; }
+    .signup-link a { color: #0d3b66; cursor: pointer; font-weight: 500; }
+
+    .alert-box      { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; border-radius: 8px; padding: 10px 12px; font-size: 13px; margin-bottom: 14px; display: none; }
+    .alert-box.show { display: block; }
+
+    .ballot-avatar     { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; overflow: hidden; flex-shrink: 0; }
+    .ballot-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .vote-btn          { width: 100%; padding: 13px; background: #0d3b66; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+    .summary-banner  { display: flex; gap: 0; background: #fff; border-radius: 14px; border: .5px solid var(--color-border-tertiary); padding: 1rem; margin-bottom: 1rem; justify-content: space-around; text-align: center; }
+    .summary-divider { width: .5px; background: var(--color-border-tertiary); }
+    .big-num { font-size: 24px; font-weight: 700; color: #0d3b66; }
+    .label   { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+
+    .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card  { background: #fff; border-radius: 12px; padding: 14px; border: .5px solid var(--color-border-tertiary); text-align: center; }
+    .stat-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+    .stat-val   { font-size: 22px; font-weight: 700; color: var(--color-text-primary); }
+
+    .tabs-inline { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .tab-pill        { background: #fff; border: 1.5px solid var(--color-border-secondary); border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-family: inherit; color: var(--color-text-secondary); }
+    .tab-pill.active { background: #0d3b66; color: #fff; border-color: #0d3b66; }
+
+    .result-section { background: #fff; border-radius: 14px; padding: 14px; border: .5px solid var(--color-border-tertiary); margin-bottom: 10px; }
+    .result-header  { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+
+    .result-avatar     { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; overflow: hidden; flex-shrink: 0; }
+    .result-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .result-name { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
+    .result-sub  { font-size: 12px; color: var(--color-text-secondary); }
+
+    .bar-row    { margin-top: 6px; }
+    .bar-track  { background: #e5e7eb; border-radius: 999px; height: 7px; overflow: hidden; }
+    .bar-fill   { height: 100%; background: #0d3b66; border-radius: 999px; transition: width .4s; }
+
+    .winner-badge { font-size: 10px; background: #dbeafe; color: #1e40af; border-radius: 20px; padding: 2px 8px; margin-left: 6px; }
+
+    .city-result { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: .5px solid var(--color-border-tertiary); }
+    .city-name   { font-size: 13px; color: var(--color-text-primary); }
+    .city-votes  { font-size: 13px; font-weight: 600; color: #0d3b66; }
+
+    .badge     { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600; }
+    .badge-win { background: #d1fae5; color: #065f46; }
+
+    .toast      { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: #111827; color: #fff; padding: 10px 20px; border-radius: 100px; font-size: 13px; opacity: 0; transition: all .25s; pointer-events: none; z-index: 999; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .voted-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 1rem; }
+    .voted-card    { background: #fff; border-radius: 20px; padding: 2rem; text-align: center; max-width: 360px; width: 100%; }
+
+    .voted-icon    { font-size: 48px; margin-bottom: 12px; }
+    .voted-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .voted-card p  { font-size: 14px; color: var(--color-text-secondary); margin-bottom: 1rem; }
+    .receipt-id    { background: #f3f4f6; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; color: #0d3b66; letter-spacing: .5px; margin-bottom: 1.25rem; word-break: break-all; }
+    .voted-card button { background: #0d3b66; color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  </style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<div id="screen-landing" class="screen active">
+
+  <div class="hero" style="margin:1.25rem;border-radius:var(--border-radius-lg)">
+    <h1>Philippine Digital Voting</h1>
+    <p>Secure, transparent, and accessible voting for every citizen. Make your voice count.</p>
+    <div>
+      <button class="btn-primary" onclick="goTo('screen-login')">Vote Now</button>
+      <button class="btn-outline" onclick="goTo('screen-results')">View Results</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">2025 Senate Candidates</div>
+    <div class="section-sub">Senatorial candidates in this election</div>
+    <div class="candidates-grid" id="landing-senate"></div>
+  </div>
+
+  <div class="section" style="padding-top:0">
+    <div class="section-title">2025 House Party-List Candidates</div>
+    <div class="section-sub">Party-list representatives in this election</div>
+    <div class="candidates-grid" id="landing-house"></div>
+  </div>
+
+</div>
+
+<div id="screen-login" class="screen">
+  <div class="login-wrap">
+    <div class="login-icon">🛡️</div>
+    <div class="login-title">Voter Login</div>
+    <div class="login-sub">Sign in to cast your vote securely</div>
+
+    <div id="login-alert" class="alert-box">⚠️ This Voter ID has already cast a vote.</div>
+
+    <div class="form-group">
+      <label class="form-label">Voter ID Number (14 digits)</label>
+      <input
+        class="form-input"
+        type="text"
+        placeholder="00000000000000"
+        id="voterID"
+        maxlength="14"
+        inputmode="numeric"
+        pattern="[0-9]{14}"
+        oninput="this.value=this.value.replace(/\D/g,'')"
+      >
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-top:4px">
+        Enter your 14-digit COMELEC Voter ID number
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <div style="position:relative">
+        <input class="form-input" type="password" placeholder="Enter your password" id="voterPass" style="padding-right:2.75rem">
+        <button
+          type="button"
+          onclick="togglePassword()"
+          aria-label="Toggle password visibility"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary);line-height:1"
+        >
+          <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <svg id="eye-off-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+
+    <div class="signup-link">
+      Don't have an account?
+      <a onclick="showToast('Registration is done at your local COMELEC office')">Register</a>
+    </div>
+
+    <div style="text-align:center;margin-top:1rem">
+      <button
+        style="background:none;border:none;font-size:13px;color:var(--color-text-secondary);cursor:pointer;font-family:inherit"
+        onclick="goTo('screen-landing')"
+      >← Back to home</button>
+    </div>
+  </div>
+</div>
+
+<div id="screen-vote" class="screen">
+
+  <div class="nav">
+    <span class="nav-brand">🗳️ VotePH</span>
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="tab-btn-senate" onclick="switchVoteTab(this,'vtab-senate')">
+        Senate <span class="count-badge" id="sel-count-senate">0</span>
+      </button>
+      <button class="nav-tab" id="tab-btn-house" onclick="switchVoteTab(this,'vtab-house')">
+        House <span class="count-badge" id="sel-count-house">0</span>
+      </button>
+      <button class="nav-tab" onclick="switchVoteTab(this,'vtab-ballot')">My Ballot</button>
+    </div>
+    <button
+      style="background:none;border:none;font-size:13px;cursor:pointer;color:var(--color-text-secondary);font-family:inherit"
+      onclick="confirmLogout()"
+    >Logout</button>
+  </div>
+
+  <div id="vtab-senate">
+    <div class="section">
+      <div class="section-title">Select Senators</div>
+      <div class="section-sub">Choose up to 12 senators · <strong id="remaining-senate">12 remaining</strong></div>
+
+      <div class="search-wrap">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="search-input" type="text" id="search-senate" placeholder="Search by name or party..." oninput="filterSenate(this.value)">
+        <button class="search-clear" id="clear-senate" onclick="clearSearch('senate')">✕</button>
+      </div>
+
+      <div id="senate-no-results" class="no-results" style="display:none">No candidates found.</div>
+      <div class="candidates-grid" id="vote-senate"></div>
+    </div>
+  </div>
+
+  <div id="vtab-house" style="display:none">
+    <div class="section">
+      <div class="section-title">Select Party-List</div>
+      <div class="section-sub">Choose up to 3 party-list representatives · <strong id="remaining-house">3 remaining</strong></div>
+
+      <div class="search-wrap">
+        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input class="search-input" type="text" id="search-house" placeholder="Search party-list name..." oninput="filterHouse(this.value)">
+        <button class="search-clear" id="clear-house" onclick="clearSearch('house')">✕</button>
+      </div>
+
+      <div id="house-no-results" class="no-results" style="display:none">No party-list found.</div>
+      <div class="candidates-grid" id="vote-house"></div>
+    </div>
+  </div>
+
+  <div id="vtab-ballot" style="display:none">
+    <div class="section">
+      <div class="section-title">Review Your Ballot</div>
+      <div class="section-sub">Confirm your selections before submitting</div>
+      <div id="ballot-list"></div>
+      <button class="vote-btn" onclick="submitVote()" style="margin-top:1.25rem">Submit Vote</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="screen-results" class="screen">
+
+  <div class="nav">
+    <span class="nav-brand">🗳️ VotePH</span>
+    <button class="nav-tab active">Results</button>
+    <button
+      style="background:none;border:none;font-size:13px;cursor:pointer;color:var(--color-text-secondary);font-family:inherit"
+      onclick="goTo('screen-landing')"
+    >← Home</button>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Election Results 2025</div>
+    <div class="section-sub">Live tally — Philippine National Election</div>
+
+    <div class="summary-banner">
+      <div>
+        <div class="big-num" id="res-total">0</div>
+        <div class="label">Total Votes Cast</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div>
+        <div class="big-num" id="res-voters">0</div>
+        <div class="label">Unique Voters</div>
+      </div>
+      <div class="summary-divider"></div>
+      <div>
+        <div class="big-num">0%</div>
+        <div class="label">Precincts Reporting</div>
+      </div>
+    </div>
+
+    <div class="tabs-inline">
+      <button class="tab-pill active" onclick="switchResultTab(this,'rt-senate')">Senate Tally</button>
+      <button class="tab-pill"        onclick="switchResultTab(this,'rt-house')">House Tally</button>
+      <button class="tab-pill"        onclick="switchResultTab(this,'rt-city')">By City</button>
+      <button class="tab-pill"        onclick="switchResultTab(this,'rt-summary')">Summary</button>
+    </div>
+
+    <div id="rt-senate">  <div id="results-senate"></div></div>
+    <div id="rt-house"  style="display:none"><div id="results-house"></div></div>
+    <div id="rt-city"   style="display:none"><div id="results-city"></div></div>
+    <div id="rt-summary"style="display:none"><div id="results-summary"></div></div>
+  </div>
+
+</div>
+
+<script>
+const senators = [
+  { id:  1, name: "ABALOS, BENHUR",           party: "PFP",    image: "benhur.png" },
+  { id:  2, name: "ADONIS, JEROME",           party: "MKBYN",  image: "adonis.jpg" },
+  { id:  3, name: "AMAD, WILSON",             party: "IND",    image: "amad.png" },
+  { id:  4, name: "ANDAMO, NARS ALYN",        party: "MKBYN",  image: "nars.png" },
+  { id:  5, name: "AQUINO, BAM",              party: "KNP",    image: "bam.webp" },
+  { id:  6, name: "ARAMBULO, RONNEL",         party: "MKBYN",  image: "ronnel.png" },
+  { id:  7, name: "ARELLANO, ERNESTO",        party: "KTPNAN", image: "ernesto.jpg" },
+  { id:  8, name: "BALLON, ROBERTO",          party: "IND",    image: "ballon.png" },
+  { id:  9, name: "BINAY, ABBY",              party: "NPC",    image: "abby.png" },
+  { id: 10, name: "BONDOC, JIMMY",            party: "PDPLBN", image: "jimmy.jpg" },
+  { id: 11, name: "BONG REVILLA, RAMON JR.",  party: "LAKAS",  image: "ramon.jpg" },
+  { id: 12, name: "BOSITA, COLONEL",          party: "IND",    image: "colonel.jpg" },
+  { id: 13, name: "BROSAS, ARLENE",           party: "MKBYN",  image: "brosas.png" },
+  { id: 14, name: "CABONEGRO, ROY",           party: "DPP",    image: "roy.jpg" },
+  { id: 15, name: "CAPUYAN, ALLEN",           party: "PPP",    image: "allen.jpg" },
+  { id: 16, name: "CASINO, TEDDY",            party: "MKBYN",  image: "casino.png" },
+  { id: 17, name: "CASTRO, TEACHER FRANCE",   party: "MKBYN",  image: "castro.png" },
+  { id: 18, name: "CAYETANO, PIA",            party: "NP",     image: "pia.webp" },
+  { id: 19, name: "D'ANGELO, DAVID",          party: "BUNYOG", image: "dangelo.png" },
+  { id: 20, name: "DE ALBAN, ATTY. ANGELO",   party: "IND",    image: "de_alban.png" },
+  { id: 21, name: "DE GUZMAN, KA LEODY",      party: "PLM",    image: "leody.png" },
+  { id: 22, name: "DELA ROSA, BATO",          party: "PDPLBN", image: "bato.webp" },
+  { id: 23, name: "DORINGO, NANAY MIMI",      party: "MKBYN",  image: "mimi.png" },
+  { id: 24, name: "ESCOBAL, ARNEL",           party: "PM",     image: "arnel.jpg" },
+  { id: 25, name: "ESPIRITU, LUKE",           party: "PLM",    image: "luke.png" },
+  { id: 26, name: "FLORANDA, MODY PISTON",    party: "MKBYN",  image: "mody.png" },
+  { id: 27, name: "GAMBOA, MARC LOUIE",       party: "IND",    image: "gamboa.jpg" },
+  { id: 28, name: "BONG GO",                  party: "PDPLBN", image: "bong.webp" },
+  { id: 29, name: "GONZALES, NORBERTO",       party: "PDSP",   image: "norberto.jpg" },
+  { id: 30, name: "HINLO, JAYVEE",            party: "PDPLBN", image: "jayvee.jpg" },
+  { id: 31, name: "HONASAN, GRINGO",          party: "RP",     image: "honasan.jpg" },
+  { id: 32, name: "JOSE, RELLY JR.",          party: "KBL",    image: "josee.jpg" },
+  { id: 33, name: "LACSON, PING",             party: "IND",    image: "ping.webp" },
+  { id: 34, name: "LAMBINO, RAUL",            party: "PDPLBN", image: "raul.jpg" },
+  { id: 35, name: "LAPID, LITO",              party: "NPC",    image: "litong_lito.webp" },
+  { id: 36, name: "LIDASAN, AMIRAH",          party: "MKBYN",  image: "amirah.jpg" },
+  { id: 37, name: "MARCOLETA, RODANTE",       party: "IND",    image: "marcoleta.webp" },
+  { id: 38, name: "MARCOS, IMEE R.",          party: "NP",     image: "imee.webp" },
+  { id: 39, name: "MARQUEZ, NORMAN",          party: "IND",    image: "norman.png" },
+  { id: 40, name: "MARTINEZ, ERIC",           party: "IND",    image: "eric.jpg" },
+  { id: 41, name: "MATA, DOC MARITES",        party: "IND",    image: "marites.jpg" },
+  { id: 42, name: "MATULA, ATTY. SONNY",      party: "WPP",    image: "matula.png" },
+  { id: 43, name: "MAZA, LIZA",               party: "MKBYN",  image: "liza.jpg" },
+  { id: 44, name: "MENDOZA, HEIDI",           party: "IND",    image: "heidi.jpg" },
+  { id: 45, name: "MONTEMAYOR, JOEY",         party: "IND",    image: "joey.png" },
+  { id: 46, name: "MUSTAPHA, SUBAIR",         party: "WPP",    image: "subair.jpg" },
+  { id: 47, name: "OLIVAR, JOSE JESSIE",      party: "IND",    image: "jose.jpg" },
+  { id: 48, name: "PACQUIAO, MANNY PACMAN",   party: "PFP",    image: "manny.jpg" },
+  { id: 49, name: "PANGILINAN, KIKO",         party: "LP",     image: "kiko.webp" },
+  { id: 50, name: "QUERUBIN, ARIEL PORFIRIO", party: "NP",     image: "ariel.jpg" },
+  { id: 51, name: "QUIBOLOY, APOLLO",         party: "IND",    image: "apollo.png" },
+  { id: 52, name: "RAMOS, DANILO",            party: "MKBYN",  image: "danilo.png" },
+  { id: 53, name: "REVILLAME, WILLIE WIL",    party: "IND",    image: "will.jpg" },
+  { id: 54, name: "RODRIGUEZ, ATTY. VIC",     party: "IND",    image: "victor.png" },
+  { id: 55, name: "SAHIDULLA, NUR-ANA",       party: "IND",    image: "nur.jpg" },
+  { id: 56, name: "SALVADOR, PHILLIP IPE",    party: "PDPLBN", image: "philip.png" },
+  { id: 57, name: "SOTTO, TITO",              party: "NPC",    image: "sotto.webp" },
+  { id: 58, name: "TAPADO, MICHAEL BONGBONG", party: "PM",     image: "mic.jpg" },
+  { id: 59, name: "TOLENTINO, FRANCIS TOL",   party: "PFP",    image: "francis.png" },
+  { id: 60, name: "TULFO, BEN BITAG",         party: "IND",    image: "ben.png" },
+  { id: 61, name: "TULFO, ERWIN",             party: "LAKAS",  image: "erwin_yarn.webp" },
+  { id: 62, name: "VALBUENA, MAR MANIBELA",   party: "IND",    image: "mars.png" },
+  { id: 63, name: "VERCELES, LEANDRO",        party: "IND",    image: "leandro.png" },
+  { id: 64, name: "VILLAR, CAMILLE",          party: "NP",     image: "camille.webp" },
+];
+
+const houseReps = [
+  { id: 101, name: "4PS",                   image: "4ps.jpg" },
+  { id: 102, name: "PPP",                   image: "ppp.png" },
+  { id: 103, name: "FPJ PANDAY BAYANIHAN",  image: "fpj.png" },
+  { id: 104, name: "KABATAAN",              image: "kabataan.png" },
+  { id: 105, name: "DUTERTE YOUTH",         image: "youth.jpg" },
+  { id: 106, name: "ML",                    image: "ml.jpg" },
+  { id: 107, name: "PBBM",                  image: "pbbm.jpg" },
+  { id: 108, name: "P3PWD",                 image: "pwd.png" },
+  { id: 109, name: "MURANG KURYENTE",       image: "murang.jpg" },
+  { id: 110, name: "BICOL SARO",            image: "bicol.png" },
+  { id: 111, name: "IPATUPAD",              image: "tupad.png" },
+  { id: 112, name: "PATROL",                image: "patrol.jpg" },
+  { id: 113, name: "JUAN PINOY",            image: "pinoy.png" },
+  { id: 114, name: "ARTE",                  image: "arte.jpg" },
+  { id: 115, name: "WIFI",                  image: "wifi.jpg" },
+  { id: 116, name: "MAAGAP",               image: "maagap.jpg" },
+  { id: 117, name: "UNITED SENIOR CITIZENS",image: "senior.jpg" },
+  { id: 118, name: "EPANAW SAMBAYANAN",     image: "epanaw.jpg" },
+  { id: 119, name: "AKO PADAYON",           image: "ako.png" },
+  { id: 120, name: "TUCP",                  image: "tucp.png" },
+  { id: 121, name: "ACT TEACHERS",          image: "act.jpg" },
+  { id: 122, name: "1PACMAN",               image: "pacman.png" },
+  { id: 123, name: "TGP",                   image: "tgp.png" },
+  { id: 124, name: "DUMPER PTDA",           image: "dumper.jpg" },
+  { id: 125, name: "ANAKALUSUGAN",          image: "anakalusugan.png" },
+  { id: 126, name: "AKSYON DAPAT",          image: "aksyon.jpg" },
+  { id: 127, name: "BHW",                   image: "bhw.png" },
+  { id: 128, name: "SULONG DIGNIDAD",       image: "sulong.jpg" },
+  { id: 129, name: "BATANG QUIAPO",         image: "batang.png" },
+  { id: 130, name: "PBA",                   image: "pba.png" },
+  { id: 131, name: "GILAS",                 image: "gilas.jpg" },
+  { id: 132, name: "AKO ILOCANO AKO",       image: "ilocano.jpg" },
+  { id: 133, name: "PAMILYANG MAGSASAKA",   image: "magsasakaa.jpg" },
+  { id: 134, name: "CLICK PARTY",           image: "click.png" },
+  { id: 135, name: "ABANTE BISDAK",         image: "abante.png" },
+  { id: 136, name: "MANILA TEACHERS",       image: "manila.jpg" },
+  { id: 137, name: "PAMANA",                image: "pamana.png" },
+  { id: 138, name: "NANAY",                 image: "nanay.png" },
+  { id: 139, name: "KM NGAYON NA",          image: "km.png" },
+  { id: 140, name: "BABAE AKO",             image: "babae.jpg" },
+  { id: 141, name: "ARISE",                 image: "arise.jpg" },
+  { id: 142, name: "MAGDALO",               image: "magdalo.jpg" },
+  { id: 143, name: "APEC",                  image: "apec.png" },
+  { id: 144, name: "MAGBUBUKID",            image: "magbubukid.png" },
+  { id: 145, name: "SSS-GSIS PENSYONADO",   image: "sss.jpg" },
+  { id: 146, name: "GABRIELA",              image: "gabriela.jpg" },
+  { id: 147, name: "TINGOG",                image: "tingog.png" },
+  { id: 148, name: "APAT-DAPAT",            image: "apat.jpg" },
+  { id: 149, name: "AHON MAHIRAP",          image: "ahon.jpg" },
+  { id: 150, name: "UGB",                   image: "ugb.jpg" },
+  { id: 151, name: "AKBAYAN",               image: "akbayan.jpg" },
+  { id: 152, name: "AGIMAT",                image: "agimat.jpg" },
+  { id: 153, name: "PHILRECA",              image: "philreca.png" },
+  { id: 154, name: "KAPUSO PM",             image: "kapuso.png" },
+  { id: 155, name: "ILOCANO DEFENDERS",     image: "defenders.png" },
+  { id: 156, name: "1-RIDER PARTY-LIST",    image: "rider.jpg" },
+  { id: 157, name: "TICTOK",                image: "tic.jpg" },
+  { id: 158, name: "BAYAN MUNA",            image: "bayan.png" },
+  { id: 159, name: "ANG PROBINSIYANO",      image: "ang.png" },
+  { id: 160, name: "BANAT",                 image: "banat.jpg" },
+  { id: 161, name: "SBP",                   image: "sbp.png" },
+  { id: 162, name: "BUHAY",                 image: "buhay.png" },
+  { id: 163, name: "TULUNGAN TAYO",         image: "tulungan.png" },
+  { id: 164, name: "SAGIP",                 image: "sagip.jpg" },
+  { id: 165, name: "BTS BAYANING TSUPER",   image: "bts.png" },
+  { id: 166, name: "VENDORS",               image: "vendors.png" },
+  { id: 167, name: "ACT-CIS",               image: "actt.png" },
+  { id: 168, name: "AKTIBONG KAAGAPAY",     image: "aktib.png" },
+  { id: 169, name: "ASENSO PINOY",          image: "asenso.jpg" },
+  { id: 170, name: "ANG KOMADRONA",         image: "komadrona.png" },
+  { id: 171, name: "PROMDI",                image: "promdi.png" },
+  { id: 172, name: "PUSONG PINOY",          image: "puso.png" },
+  { id: 173, name: "KUSUG TAUSUG",          image: "kusug.jpg" },
+  { id: 174, name: "DAMAYANG FILIPINO",     image: "damay.jpg" },
+  { id: 175, name: "MPBL",                  image: "mpbl.png" },
+  { id: 176, name: "ANGAT",                 image: "angat.jpg" },
+  { id: 177, name: "KALINGA",               image: "kalinga.png" },
+  { id: 178, name: "BOSES PARTY-LIST",      image: "boses.jpg" },
+  { id: 179, name: "ARANGKADA PILIPINO",    image: "arang.jpg" },
+  { id: 180, name: "AANGAT TAYO",           image: "angatt.jpg" },
+  { id: 181, name: "OFW",                   image: "ofw.png" },
+  { id: 182, name: "BIDA KATAGUMPAY",       image: "bida.png" },
+  { id: 183, name: "KAMANGGAGAWA",          image: "kamang.png" },
+  { id: 184, name: "BFF",                   image: "bff.jpg" },
+  { id: 185, name: "BUNYOG",                image: "bunyog.jpg" },
+  { id: 186, name: "AGRI",                  image: "agri.png" },
+  { id: 187, name: "SENIOR CITIZENS",       image: "seniorr.jpg" },
+  { id: 188, name: "4K",                    image: "4k.png" },
+  { id: 189, name: "PBP",                   image: "pbp.png" },
+  { id: 190, name: "ONE COOP",              image: "one.jpg" },
+  { id: 191, name: "CIBAC",                 image: "cibac.png" },
+  { id: 192, name: "BH-BAGONG HENERASYON",  image: "bh.png" },
+  { id: 193, name: "1AGILA",                image: "agila.png" },
+  { id: 194, name: "EDUAKSYON",             image: "edu.png" },
+  { id: 195, name: "ANG TINIG NG SENIORS",  image: "tinig.png" },
+  { id: 196, name: "BG PARTY-LIST",         image: "bg.png" },
+  { id: 197, name: "PINOY AKO",             image: "pinoyy.jpg" },
+  { id: 198, name: "H.E.L.P. PILIPINAS",    image: "help.png" },
+  { id: 199, name: "HEALTH WORKERS",        image: "health.png" },
+  { id: 200, name: "PEOPLE'S CHAMP",        image: "people.jpg" },
+  { id: 201, name: "AA-KASOSYO PARTY",      image: "aa.jpg" },
+  { id: 202, name: "SOLID NORTH PARTY",     image: "solid.jpg" },
+  { id: 203, name: "ABAMIN",                image: "abamin.jpg" },
+  { id: 204, name: "TRABAHO",               image: "trabaho.png" },
+  { id: 205, name: "ANGKASANGGA",           image: "angka.png" },
+  { id: 206, name: "TODA AKSYON",           image: "toda.png" },
+  { id: 207, name: "TURISMO",               image: "turismo.jpg" },
+  { id: 208, name: "ABONO",                 image: "abono.png" },
+  { id: 209, name: "ASAP NA",               image: "asap.jpg" },
+  { id: 210, name: "LINGAP",                image: "lingap.png" },
+  { id: 211, name: "UNITED FRONTLINERS",    image: "united.png" },
+  { id: 212, name: "KASAMBAHAY",            image: "kasam.jpg" },
+  { id: 213, name: "TUTOK TO WIN",          image: "tutok.jpg" },
+  { id: 214, name: "AKO OFW",               image: "akoo.jpg" },
+  { id: 215, name: "AGAP",                  image: "agap.jpg" },
+  { id: 216, name: "1TAHANAN",              image: "1.jpg" },
+  { id: 217, name: "COOP-NATCCO",           image: "coop.jpg" },
+  { id: 218, name: "KABAYAN",               image: "kabayan.jpg" },
+  { id: 219, name: "1MUNTI",                image: "munti.png" },
+  { id: 220, name: "PINOYS WORKERS",        image: "workers.png" },
+  { id: 221, name: "API PARTY",             image: "api.png" },
+  { id: 222, name: "AKO BISAYA",            image: "bisaya.png" },
+  { id: 223, name: "KAMALAYAN",             image: "kamay.jpg" },
+  { id: 224, name: "AKO TANOD",             image: "tanod.png" },
+  { id: 225, name: "PROBINSYANO AKO",       image: "probin.jpg" },
+  { id: 226, name: "KABABAIHAN",            image: "kababaihan.jpg" },
+  { id: 227, name: "RAM",                   image: "ram.jpg" },
+  { id: 228, name: "ALONA",                 image: "alona.png" },
+  { id: 229, name: "AKO BICOL",             image: "bicoll.jpg" },
+  { id: 230, name: "GP (GALING SA PUSO)",   image: "gp.jpg" },
+  { id: 231, name: "KAUNLAD PINOY",         image: "kaunlad.jpg" },
+  { id: 232, name: "ABP",                   image: "abp.jpg" },
+  { id: 233, name: "CWS",                   image: "cws.png" },
+  { id: 234, name: "LPGMA",                 image: "lpgma.png" },
+  { id: 235, name: "A TEACHER",             image: "a.png" },
+  { id: 236, name: "SWERTE",                image: "swerte.jpg" },
+  { id: 237, name: "GABAY",                 image: "gabay.png" },
+  { id: 238, name: "MALASAKIT@BAYANIHAN",   image: "malasakit.png" },
+  { id: 239, name: "AKAY NI SOL",           image: "akay.png" },
+  { id: 240, name: "LUNAS",                 image: "lunas.jpg" },
+  { id: 241, name: "DIWA",                  image: "diwa.jpg" },
+  { id: 242, name: "PINUNO",                image: "pinuno.png" },
+  { id: 243, name: "PAMILYA MUNA",          image: "pamilya.png" },
+  { id: 244, name: "BAGONG PILIPINAS",      image: "bagong.jpg" },
+  { id: 245, name: "HUGPONG FEDERAL",       image: "hugpong.jpg" },
+  { id: 246, name: "TUPAD",                 image: "tupadd.png" },
+  { id: 247, name: "LAANG KAWAL",           image: "laang.png" },
+  { id: 248, name: "PAMILYA KO",            image: "ko.png" },
+  { id: 249, name: "BBM",                   image: "bbm.png" },
+  { id: 250, name: "HEAL PH",               image: "heal.jpg" },
+  { id: 251, name: "ABANG LINGKOD",         image: "abang.png" },
+  { id: 252, name: "MAGSASAKA",             image: "magsaka.jpg" },
+  { id: 253, name: "MAHARLIKA",             image: "maharlika.png" },
+  { id: 254, name: "USWAG ILONGGO",         image: "uswag.jpg" },
+];
+
+const cities = [
+  "Puerto Princesa City", "Narra", "Brooke's Point", "Roxas",
+  "San Vicente", "Bataraza", "El Nido", "Coron", "Taytay", "Quezon",
+];
+</script>
+
+<script>
+let senateVotes  = {};
+let houseVotes   = {};
+let cityVotes    = {};
+let totalVotes   = 0;
+let voterLog     = {};
+let uniqueVoters = 0;
+let currentVoter = null;
+let selectedSenate = [];
+let selectedHouse  = [];
+let senateQuery = '';
+let houseQuery  = '';
+
+function togglePassword() {
+  const input      = document.getElementById('voterPass');
+  const eyeIcon    = document.getElementById('eye-icon');
+  const eyeOffIcon = document.getElementById('eye-off-icon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    eyeIcon.style.display    = 'none';
+    eyeOffIcon.style.display = 'block';
+  } else {
+    input.type = 'password';
+    eyeIcon.style.display    = 'block';
+    eyeOffIcon.style.display = 'none';
+  }
+}
+
+function initVotes() {
+  senators.forEach(c  => { senateVotes[c.id] = 0; });
+  houseReps.forEach(c => { houseVotes[c.id]  = 0; });
+  cities.forEach(city => { cityVotes[city]   = 0; });
+  totalVotes = 0;
+  uniqueVoters = 0;
+
+  try {
+    const saved = localStorage.getItem('voteph_snapshot');
+    if (saved) {
+      const snap = JSON.parse(saved);
+      if (snap.senateVotes) Object.assign(senateVotes, snap.senateVotes);
+      if (snap.houseVotes)  Object.assign(houseVotes,  snap.houseVotes);
+      if (snap.cityVotes)   Object.assign(cityVotes,   snap.cityVotes);
+      if (snap.voterLog)    Object.assign(voterLog,    snap.voterLog);
+      if (snap.meta) {
+        totalVotes   = snap.meta.totalVotes   || 0;
+        uniqueVoters = snap.meta.uniqueVoters || 0;
+      }
+    }
+  } catch (e) {  }
+
+  updateResultCounters();
+}
+
+function updateResultCounters() {
+  document.getElementById('res-total').textContent  = totalVotes.toLocaleString();
+  document.getElementById('res-voters').textContent = uniqueVoters.toLocaleString();
+}
+
+function getInitials(name) {
+  return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+function cardAvatarHTML(c, bgColor) {
+  bgColor = bgColor || '#0d3b66';
+  if (c.image) {
+    return `<div class="avatar" style="background:${bgColor}"><img src="${c.image}" alt="${c.name}" onerror="this.style.display='none';this.parentElement.textContent='${getInitials(c.name)}'"></div>`;
+  }
+  return `<div class="avatar" style="background:${bgColor}">${getInitials(c.name)}</div>`;
+}
+
+function ballotAvatarHTML(c, bgColor) {
+  bgColor = bgColor || '#0d3b66';
+  if (c.image) {
+    return `<div class="ballot-avatar" style="background:${bgColor}"><img src="${c.image}" alt="${c.name}" onerror="this.style.display='none';this.parentElement.textContent='${getInitials(c.name)}'"></div>`;
+  }
+  return `<div class="ballot-avatar" style="background:${bgColor}">${getInitials(c.name)}</div>`;
+}
+
+function resultAvatarHTML(c, color) {
+  color = color || '#0d3b66';
+  if (c.image) {
+    return `<div class="result-avatar" style="background:${color}"><img src="${c.image}" alt="${c.name}" onerror="this.style.display='none';this.parentElement.textContent='${getInitials(c.name)}'"></div>`;
+  }
+  return `<div class="result-avatar" style="background:${color}">${getInitials(c.name)}</div>`;
+}
+</script>
+
+<script>
+function renderLanding() {
+  document.getElementById('landing-senate').innerHTML = senators.map(c => `
+    <div class="candidate-card">
+      ${cardAvatarHTML(c, '#0d3b66')}
+      <div class="card-body">
+        <div class="cand-name">${c.name}</div>
+        <div class="cand-party">${c.party}</div>
+        <div class="type-badge type-senate">Senator</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('landing-house').innerHTML = houseReps.map(c => `
+    <div class="candidate-card">
+      ${cardAvatarHTML(c, '#92400e')}
+      <div class="card-body">
+        <div class="cand-name">${c.name}</div>
+        <div class="type-badge type-house">Party-List</div>
+      </div>
+    </div>`).join('');
+}
+
+function filterSenate(q) {
+  senateQuery = q.trim().toLowerCase();
+  document.getElementById('clear-senate').style.display = q ? 'block' : 'none';
+  renderVoteSenate();
+}
+
+function filterHouse(q) {
+  houseQuery = q.trim().toLowerCase();
+  document.getElementById('clear-house').style.display = q ? 'block' : 'none';
+  renderVoteHouse();
+}
+
+function clearSearch(type) {
+  if (type === 'senate') {
+    document.getElementById('search-senate').value = '';
+    filterSenate('');
+  } else {
+    document.getElementById('search-house').value = '';
+    filterHouse('');
+  }
+}
+
+function highlightMatch(text, query) {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query);
+  if (idx === -1) return text;
+  return (
+    text.slice(0, idx) +
+    '<mark style="background:#fef08a;border-radius:2px;padding:0 1px">' +
+    text.slice(idx, idx + query.length) +
+    '</mark>' +
+    text.slice(idx + query.length)
+  );
+}
+
+function renderVoteSenate() {
+  const filtered = senateQuery
+    ? senators.filter(c => c.name.toLowerCase().includes(senateQuery) || c.party.toLowerCase().includes(senateQuery))
+    : senators;
+
+  document.getElementById('senate-no-results').style.display = filtered.length ? 'none' : 'block';
+
+  document.getElementById('vote-senate').innerHTML = filtered.map(c => `
+    <div class="candidate-card${selectedSenate.includes(c.id) ? ' selected' : ''}" onclick="toggleSenate(${c.id})" id="scard-${c.id}">
+      ${cardAvatarHTML(c, '#0d3b66')}
+      <div class="card-body">
+        <div class="cand-name">${highlightMatch(c.name, senateQuery)}</div>
+        <div class="cand-party">${highlightMatch(c.party, senateQuery)}</div>
+        <div class="type-badge type-senate">Senator</div>
+        ${selectedSenate.includes(c.id) ? '<div class="selected-badge">✓ Selected</div>' : ''}
+      </div>
+    </div>`).join('');
+
+  updateSenateUI();
+}
+
+function updateSenateUI() {
+  const rem = 12 - selectedSenate.length;
+  document.getElementById('sel-count-senate').textContent  = selectedSenate.length;
+  document.getElementById('remaining-senate').textContent  = rem === 0 ? 'Max reached' : `${rem} remaining`;
+}
+
+function toggleSenate(id) {
+  if (selectedSenate.includes(id)) {
+    selectedSenate = selectedSenate.filter(x => x !== id);
+    showToast('Removed from ballot');
+  } else {
+    if (selectedSenate.length >= 12) { showToast('Max 12 senators per ballot'); return; }
+    selectedSenate.push(id);
+    showToast('Added to ballot');
+  }
+  renderVoteSenate();
+}
+
+function renderVoteHouse() {
+  const filtered = houseQuery
+    ? houseReps.filter(c => c.name.toLowerCase().includes(houseQuery))
+    : houseReps;
+
+  document.getElementById('house-no-results').style.display = filtered.length ? 'none' : 'block';
+
+  document.getElementById('vote-house').innerHTML = filtered.map(c => `
+    <div class="candidate-card${selectedHouse.includes(c.id) ? ' selected' : ''}" onclick="toggleHouse(${c.id})" id="hcard-${c.id}">
+      ${cardAvatarHTML(c, '#92400e')}
+      <div class="card-body">
+        <div class="cand-name">${highlightMatch(c.name, houseQuery)}</div>
+        <div class="type-badge type-house">Party-List</div>
+        ${selectedHouse.includes(c.id) ? '<div class="selected-badge">✓ Selected</div>' : ''}
+      </div>
+    </div>`).join('');
+
+  updateHouseUI();
+}
+
+function updateHouseUI() {
+  const rem = 3 - selectedHouse.length;
+  document.getElementById('sel-count-house').textContent = selectedHouse.length;
+  document.getElementById('remaining-house').textContent = rem === 0 ? 'Max reached' : `${rem} remaining`;
+}
+
+function toggleHouse(id) {
+  if (selectedHouse.includes(id)) {
+    selectedHouse = selectedHouse.filter(x => x !== id);
+    showToast('Removed from ballot');
+  } else {
+    if (selectedHouse.length >= 3) { showToast('Max 3 party-list per ballot'); return; }
+    selectedHouse.push(id);
+    showToast('Added to ballot');
+  }
+  renderVoteHouse();
+}
+
+function renderBallot() {
+  const list = document.getElementById('ballot-list');
+  const allSelected = [
+    ...selectedSenate.map(id => ({ c: senators.find(x => x.id === id), type: 'Senate' })),
+    ...selectedHouse.map(id  => ({ c: houseReps.find(x => x.id === id), type: 'Party-List' })),
+  ];
+
+  if (!allSelected.length) {
+    list.innerHTML = '<p style="color:var(--color-text-secondary);font-size:14px;text-align:center;padding:2rem">No candidates selected yet</p>';
+    return;
+  }
+
+  list.innerHTML = `
+    <div style="background:#e8f0fa;border-radius:8px;padding:10px 14px;font-size:13px;color:#0d3b66;margin-bottom:12px;font-weight:500">
+      🗳️ ${selectedSenate.length} senator${selectedSenate.length !== 1 ? 's' : ''} · ${selectedHouse.length} party-list · Voter: <strong>${currentVoter}</strong>
+    </div>
+    ${allSelected.map(({ c, type }, idx) => `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;border-bottom:.5px solid var(--color-border-tertiary)">
+        <span style="font-size:12px;color:#6b7280;width:18px;flex-shrink:0">${idx + 1}.</span>
+        ${ballotAvatarHTML(c, type === 'Senate' ? '#0d3b66' : '#92400e')}
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:500;color:var(--color-text-primary)">${c.name}</div>
+          <div style="font-size:12px;color:var(--color-text-secondary)">
+            <span class="type-badge ${type === 'Senate' ? 'type-senate' : 'type-house'}">${type}</span>
+            ${type === 'Senate' ? ' · ' + c.party : ''}
+          </div>
+        </div>
+        <button
+          onclick="${type === 'Senate' ? `toggleSenate(${c.id})` : `toggleHouse(${c.id})`};renderBallot()"
+          style="background:none;border:.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:4px 10px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);font-family:inherit"
+        >Remove</button>
+      </div>`).join('')}`;
+}
+
+function switchVoteTab(btn, tabId) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  ['vtab-senate', 'vtab-house', 'vtab-ballot'].forEach(id => {
+    document.getElementById(id).style.display = id === tabId ? 'block' : 'none';
+  });
+  if (tabId === 'vtab-ballot') renderBallot();
+}
+
+function switchResultTab(btn, tabId) {
+  document.querySelectorAll('.tab-pill').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  ['rt-senate', 'rt-house', 'rt-city', 'rt-summary'].forEach(id => {
+    document.getElementById(id).style.display = id === tabId ? 'block' : 'none';
+  });
+}
+</script>
+
+<script>
+function doLogin() {
+  const id      = document.getElementById('voterID').value.trim();
+  const pass    = document.getElementById('voterPass').value.trim();
+  const alertEl = document.getElementById('login-alert');
+  alertEl.classList.remove('show');
+
+  if (!id || !pass) { showToast('Please fill in all fields'); return; }
+  if (!/^\d{14}$/.test(id)) { showToast('Voter ID must be exactly 14 digits'); return; }
+
+  if (voterLog[id]) {
+    alertEl.innerHTML = `⚠️ Voter ID <strong>${id}</strong> has already voted on ${new Date(voterLog[id].timestamp).toLocaleString()}. Receipt: <strong>${voterLog[id].receiptId}</strong>`;
+    alertEl.classList.add('show');
+    return;
+  }
+
+  showToast('Verifying identity...');
+  setTimeout(() => {
+    showToast('✓ Login successful!');
+    currentVoter   = id;
+    selectedSenate = [];
+    selectedHouse  = [];
+    setTimeout(() => goTo('screen-vote'), 800);
+  }, 1000);
+}
+
+function exportSnapshot() {
+  try {
+    const snapshot = {
+      meta: { uniqueVoters, totalVotes },
+      senators, houseReps, senateVotes, houseVotes, cityVotes, voterLog,
+    };
+    localStorage.setItem('voteph_snapshot', JSON.stringify(snapshot));
+  } catch (e) { /* ignore */ }
+}
+
+function submitVote() {
+  if (!selectedSenate.length && !selectedHouse.length) {
+    showToast('Please select at least one candidate');
+    return;
+  }
+
+  const receiptId = 'PH-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+  const timestamp = Date.now();
+
+  voterLog[currentVoter] = {
+    timestamp,
+    receiptId,
+    senate: [...selectedSenate],
+    house:  [...selectedHouse],
+  };
+  uniqueVoters++;
+
+  const randomCity = cities[Math.floor(Math.random() * cities.length)];
+  cityVotes[randomCity] = (cityVotes[randomCity] || 0) + 1;
+
+  selectedSenate.forEach(id => { senateVotes[id] += 1; totalVotes += 1; });
+  selectedHouse.forEach(id  => { houseVotes[id]  += 1; totalVotes += 1; });
+
+  exportSnapshot();
+  updateResultCounters();
+  renderResults();
+  showVotedOverlay(receiptId);
+
+  selectedSenate = [];
+  selectedHouse  = [];
+  currentVoter   = null;
+}
+
+function showVotedOverlay(receiptId) {
+  const overlay = document.createElement('div');
+  overlay.className = 'voted-overlay';
+  overlay.innerHTML = `
+    <div class="voted-card">
+      <div class="voted-icon">✅</div>
+      <h2>Vote Submitted!</h2>
+      <p>Your ballot has been recorded securely. Keep your receipt ID for verification.</p>
+      <div class="receipt-id">RECEIPT: ${receiptId}</div>
+      <button onclick="this.closest('.voted-overlay').remove();goTo('screen-results')">View Results</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+</script>
+
+<script>
+function renderResults() {
+  const sortedSen = [...senators].sort((a, b) => senateVotes[b.id] - senateVotes[a.id]);
+  const maxSen    = sortedSen.length ? (senateVotes[sortedSen[0].id] || 1) : 1;
+
+  document.getElementById('results-senate').innerHTML = sortedSen.map((c, i) => `
+    <div class="result-section">
+      <div class="result-header">
+        ${resultAvatarHTML(c, '#0d3b66')}
+        <div style="flex:1">
+          <div class="result-name">
+            ${c.name}
+            ${i < 12 && senateVotes[c.id] > 0 ? '<span class="winner-badge">🏆 Elected Senator</span>' : ''}
+          </div>
+          <div class="result-sub">${c.party}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:600;color:#0d3b66">${senateVotes[c.id].toLocaleString()}</div>
+          <div style="font-size:11px;color:var(--color-text-secondary)">votes</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${maxSen > 0 ? Math.round(senateVotes[c.id] / maxSen * 100) : 0}%"></div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--color-text-secondary);text-align:right;margin-top:4px">
+        ${totalVotes > 0 ? (senateVotes[c.id] / totalVotes * 100).toFixed(1) : 0}% of total
+      </div>
+    </div>`).join('');
+
+  const sortedHouse = [...houseReps].sort((a, b) => houseVotes[b.id] - houseVotes[a.id]);
+  const maxHouse    = sortedHouse.length ? (houseVotes[sortedHouse[0].id] || 1) : 1;
+
+  document.getElementById('results-house').innerHTML = sortedHouse.map((c, i) => `
+    <div class="result-section">
+      <div class="result-header">
+        ${resultAvatarHTML(c, '#92400e')}
+        <div style="flex:1">
+          <div class="result-name">
+            ${c.name}
+            ${i < 3 && houseVotes[c.id] > 0 ? '<span class="winner-badge" style="background:#fef3c7;color:#92400e">🏛️ Elected Rep</span>' : ''}
+          </div>
+          <div class="result-sub">Party-List</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:16px;font-weight:600;color:#92400e">${houseVotes[c.id].toLocaleString()}</div>
+          <div style="font-size:11px;color:var(--color-text-secondary)">votes</div>
+        </div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${maxHouse > 0 ? Math.round(houseVotes[c.id] / maxHouse * 100) : 0}%;background:#92400e"></div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  const sortedCities = Object.entries(cityVotes).sort((a, b) => b[1] - a[1]);
+
+  document.getElementById('results-city').innerHTML = `
+    <div class="result-section">
+      <div style="font-size:15px;font-weight:500;margin-bottom:1rem;color:var(--color-text-primary)">Votes by City/Municipality</div>
+      ${sortedCities.map(([city, v], i) => `
+        <div class="city-result">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--color-text-secondary);width:20px">${i + 1}.</span>
+            <span class="city-name">${city}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="city-votes">${v.toLocaleString()} votes</span>
+            ${i === 0 && v > 0 ? '<span class="badge badge-win">Highest</span>' : ''}
+          </div>
+        </div>`).join('')}
+      <div style="margin-top:1rem;padding-top:1rem;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;font-size:14px">
+        <span style="color:var(--color-text-secondary)">Total (Palawan Province)</span>
+        <span style="font-weight:600;color:#0d3b66">${Object.values(cityVotes).reduce((a, b) => a + b, 0).toLocaleString()} votes</span>
+      </div>
+    </div>`;
+
+  const senWinners   = sortedSen.filter(c => senateVotes[c.id] > 0).slice(0, 12);
+  const houseWinners = sortedHouse.filter(c => houseVotes[c.id] > 0).slice(0, 3);
+
+  const partyCount = {};
+  [...senWinners, ...houseWinners].forEach(c => {
+    const k = c.party || c.name;
+    partyCount[k] = (partyCount[k] || 0) + 1;
+  });
+  const partySorted = Object.entries(partyCount).sort((a, b) => b[1] - a[1]);
+
+  document.getElementById('results-summary').innerHTML = `
+    <div class="result-section">
+      <div style="font-size:15px;font-weight:600;color:#0d3b66;margin-bottom:1rem">📊 Election Summary</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem">
+        <div style="background:#e8f0fa;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:28px;font-weight:700;color:#0d3b66">${uniqueVoters.toLocaleString()}</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:2px">Unique Voters</div>
+        </div>
+        <div style="background:#e8f0fa;border-radius:10px;padding:14px;text-align:center">
+          <div style="font-size:28px;font-weight:700;color:#0d3b66">${totalVotes.toLocaleString()}</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:2px">Total Ballots</div>
+        </div>
+      </div>
+
+      ${partySorted.length ? `
+        <div style="font-size:13px;font-weight:600;color:var(--color-text-primary);margin-bottom:8px">Seats Won by Party</div>
+        ${partySorted.map(([party, count]) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:.5px solid var(--color-border-tertiary)">
+            <div style="flex:1;font-size:13px;color:var(--color-text-primary)">${party}</div>
+            <div style="font-size:13px;font-weight:600;color:#0d3b66">${count} seat${count > 1 ? 's' : ''}</div>
+            <div style="width:80px;height:6px;background:#e5e7eb;border-radius:999px;overflow:hidden">
+              <div style="width:${Math.round(count / 15 * 100)}%;height:100%;background:#0d3b66;border-radius:999px"></div>
+            </div>
+          </div>`).join('')}` : '<p style="color:var(--color-text-secondary);font-size:13px">No votes cast yet.</p>'}
+
+      ${senWinners.length ? `
+        <div style="font-size:13px;font-weight:600;color:var(--color-text-primary);margin:1.25rem 0 8px">🏆 Leading Senators (Top 12)</div>
+        ${senWinners.map((c, i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--color-border-tertiary)">
+            <span style="font-size:12px;color:#6b7280;width:20px">${i + 1}.</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">${c.name}</div>
+              <div style="font-size:11px;color:#6b7280">${c.party}</div>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:#0d3b66">${senateVotes[c.id].toLocaleString()}</div>
+          </div>`).join('')}` : ''}
+
+      ${houseWinners.length ? `
+        <div style="font-size:13px;font-weight:600;color:var(--color-text-primary);margin:1.25rem 0 8px">🏛️ Leading Party-List Reps (Top 3)</div>
+        ${houseWinners.map((c, i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:.5px solid var(--color-border-tertiary)">
+            <span style="font-size:12px;color:#6b7280;width:20px">${i + 1}.</span>
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">${c.name}</div>
+              <div style="font-size:11px;color:#92400e">Party-List Group</div>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:#92400e">${houseVotes[c.id].toLocaleString()}</div>
+          </div>`).join('')}` : ''}
+
+      <div style="margin-top:1.25rem;padding:12px;background:#f0fdf4;border-radius:8px;font-size:12px;color:#166534">
+        🔒 All votes are hashed and logged with receipt IDs. Duplicate voting is blocked at login.
+      </div>
+    </div>`;
+}
+</script>
+
+<script>
+function goTo(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+
+  if (screenId === 'screen-vote') {
+    senateQuery = '';
+    houseQuery  = '';
+    document.getElementById('search-senate').value = '';
+    document.getElementById('search-house').value  = '';
+    document.getElementById('clear-senate').style.display = 'none';
+    document.getElementById('clear-house').style.display  = 'none';
+
+    renderVoteSenate();
+    renderVoteHouse();
+
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-btn-senate').classList.add('active');
+    ['vtab-senate', 'vtab-house', 'vtab-ballot'].forEach(id => {
+      document.getElementById(id).style.display = id === 'vtab-senate' ? 'block' : 'none';
+    });
+  }
+
+  if (screenId === 'screen-login') {
+    document.getElementById('login-alert').classList.remove('show');
+    document.getElementById('voterID').value   = '';
+    document.getElementById('voterPass').value = '';
+    document.getElementById('voterPass').type  = 'password';
+    document.getElementById('eye-icon').style.display    = 'block';
+    document.getElementById('eye-off-icon').style.display = 'none';
+  }
+
+  if (screenId === 'screen-results') renderResults();
+}
+
+function confirmLogout() {
+  if (selectedSenate.length > 0 || selectedHouse.length > 0) {
+    if (!confirm('You have unsaved selections. Logout anyway?')) return;
+  }
+  selectedSenate = [];
+  selectedHouse  = [];
+  currentVoter   = null;
+  goTo('screen-landing');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+initVotes();
+renderLanding();
+renderResults();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VotePH Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --color-text-primary:    #111827;
+      --color-text-secondary:  #6b7280;
+      --color-border-tertiary: #e5e7eb;
+      --color-border-secondary:#d1d5db;
+      --border-radius-lg: 16px;
+      --border-radius-md:  8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f3f4f6; color: var(--color-text-primary); }
+
+    .nav        { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: #fff; border-bottom: .5px solid var(--color-border-tertiary); flex-wrap: wrap; }
+    .nav-brand  { font-weight: 600; font-size: 15px; color: #0d3b66; margin-right: auto; }
+    .nav-tabs   { display: flex; gap: 4px; }
+    .nav-tab    { background: none; border: none; font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 20px; font-family: inherit; color: var(--color-text-secondary); }
+    .nav-tab.active { background: #0d3b66; color: #fff; }
+
+    .section       { padding: 1.25rem; }
+    .section-title { font-size: 16px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px; }
+    .section-sub   { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1rem; }
+
+    .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card  { background: #fff; border-radius: 12px; padding: 14px; border: .5px solid var(--color-border-tertiary); text-align: center; }
+    .stat-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+    .stat-val   { font-size: 22px; font-weight: 700; color: var(--color-text-primary); }
+
+    .tabs-inline { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+    .tab-pill        { background: #fff; border: 1.5px solid var(--color-border-secondary); border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-family: inherit; color: var(--color-text-secondary); }
+    .tab-pill.active { background: #0d3b66; color: #fff; border-color: #0d3b66; }
+
+    .result-section { background: #fff; border-radius: 14px; padding: 14px; border: .5px solid var(--color-border-tertiary); margin-bottom: 10px; }
+    .result-header  { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+
+    .result-avatar     { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; overflow: hidden; flex-shrink: 0; }
+    .result-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    .result-name { font-size: 14px; font-weight: 600; color: var(--color-text-primary); }
+    .result-sub  { font-size: 12px; color: var(--color-text-secondary); }
+
+    .bar-row    { margin-top: 6px; }
+    .bar-track  { background: #e5e7eb; border-radius: 999px; height: 7px; overflow: hidden; }
+    .bar-fill   { height: 100%; background: #0d3b66; border-radius: 999px; transition: width .4s; }
+
+    .winner-badge { font-size: 10px; background: #dbeafe; color: #1e40af; border-radius: 20px; padding: 2px 8px; margin-left: 6px; }
+
+    .city-result { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: .5px solid var(--color-border-tertiary); }
+    .city-name   { font-size: 13px; color: var(--color-text-primary); }
+    .city-votes  { font-size: 13px; font-weight: 600; color: #0d3b66; }
+
+    .login-btn { width: 100%; padding: 11px; background: #0d3b66; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+    .toast      { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: #111827; color: #fff; padding: 10px 20px; border-radius: 100px; font-size: 13px; opacity: 0; transition: all .25s; pointer-events: none; z-index: 999; white-space: nowrap; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .live-badge { display: inline-flex; align-items: center; gap: 5px; background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
+    .live-dot   { width: 6px; height: 6px; background: #22c55e; border-radius: 50%; animation: pulse 1.5s infinite; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+
+    .empty-state      { text-align: center; color: var(--color-text-secondary); font-size: 14px; padding: 3rem 1rem; }
+    .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state p    { margin-bottom: 6px; }
+    .empty-state small { font-size: 12px; }
+
+    .hiw-step  { display: flex; gap: 14px; align-items: flex-start; padding: 16px; background: #fff; border-radius: 14px; border: .5px solid var(--color-border-tertiary); margin-bottom: 10px; }
+    .hiw-icon  { font-size: 26px; flex-shrink: 0; width: 44px; height: 44px; background: #e8f0fa; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+    .hiw-title { font-size: 14px; font-weight: 600; color: var(--color-text-primary); margin-bottom: 4px; }
+    .hiw-desc  { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+    .hiw-desc b { color: var(--color-text-primary); font-weight: 600; }
+
+    .hiw-badge         { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 6px; }
+    .hiw-badge-green   { background: #d1fae5; color: #065f46; }
+    .hiw-badge-blue    { background: #dbeafe; color: #1e40af; }
+    .hiw-badge-yellow  { background: #fef3c7; color: #92400e; }
+    .hiw-badge-red     { background: #fee2e2; color: #b91c1c; }
+
+    .hiw-section-label { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--color-text-secondary); margin: 1.25rem 0 8px; }
+
+    .hiw-callout      { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: flex; gap: 10px; align-items: flex-start; }
+    .hiw-callout-warn { background: #fffbeb; border-color: #fde68a; }
+    .hiw-callout-red  { background: #fff1f2; border-color: #fecdd3; }
+    .hiw-callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .hiw-callout-text { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+    .hiw-callout-text b { color: var(--color-text-primary); }
+
+    .faq-item    { background: #fff; border-radius: 12px; border: .5px solid var(--color-border-tertiary); margin-bottom: 8px; overflow: hidden; }
+    .faq-q       { width: 100%; text-align: left; background: none; border: none; padding: 14px 16px; font-size: 13px; font-weight: 600; color: var(--color-text-primary); cursor: pointer; font-family: inherit; display: flex; justify-content: space-between; align-items: center; }
+    .faq-q:hover { background: #f9fafb; }
+    .faq-chevron       { font-size: 11px; color: var(--color-text-secondary); transition: transform .2s; }
+    .faq-chevron.open  { transform: rotate(180deg); }
+    .faq-a       { display: none; padding: 12px 16px 14px; font-size: 13px; color: var(--color-text-secondary); line-height: 1.7; border-top: .5px solid var(--color-border-tertiary); }
+    .faq-a.open  { display: block; }
+  </style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<div class="nav" style="position:sticky;top:0;z-index:10">
+  <span class="nav-brand">🛡️ VotePH Admin</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('sec-votes', this)">Live Votes</button>
+    <button class="nav-tab"        onclick="showSection('sec-bridge', this)">Bridge</button>
+    <button class="nav-tab"        onclick="showSection('sec-help', this)">How it works</button>
+  </div>
+  <span class="live-badge"><span class="live-dot"></span>Live</span>
+  <button
+    style="background:none;border:none;font-size:13px;cursor:pointer;color:var(--color-text-secondary);font-family:inherit"
+    onclick="window.location.href='ph_voting_platform.html'"
+  >← Back to voting</button>
+</div>
+
+<div class="section" id="sec-votes">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div class="section-title">Admin Console</div>
+    <span id="last-updated" style="font-size:11px;color:var(--color-text-secondary)"></span>
+  </div>
+  <div class="section-sub" style="margin-bottom:1rem">
+    Live vote tallies — synced via localStorage. Updates instantly when votes are cast in the same browser.
+  </div>
+
+  <div class="stat-cards" style="margin-bottom:1.25rem">
+    <div class="stat-card"><div class="stat-label">Unique Voters</div>   <div class="stat-val" id="admin-unique">0</div></div>
+    <div class="stat-card"><div class="stat-label">Total Ballots Cast</div><div class="stat-val" id="admin-total">0</div></div>
+  </div>
+
+  <div class="tabs-inline">
+    <button class="tab-pill active" onclick="adminSwitchTab(this,'admin-senate')">Senate</button>
+    <button class="tab-pill"        onclick="adminSwitchTab(this,'admin-house')">Party-List</button>
+    <button class="tab-pill"        onclick="adminSwitchTab(this,'admin-city')">City</button>
+  </div>
+
+  <div id="admin-senate"><div id="admin-results-senate"></div></div>
+  <div id="admin-house"  style="display:none"><div id="admin-results-house"></div></div>
+  <div id="admin-city"   style="display:none"><div id="admin-results-city"></div></div>
+
+  <div style="margin-top:1.25rem;padding:14px;background:#fff;border:.5px solid var(--color-border-tertiary);border-radius:14px">
+    <div class="section-title" style="margin-bottom:6px">Actions</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="login-btn" style="flex:1;min-width:160px" onclick="downloadCSV()">⬇ Export votes.csv</button>
+      <button class="login-btn" style="flex:1;min-width:160px;background:#7f1d1d" onclick="resetSession()">🗑 Reset all votes</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="section" id="sec-bridge" style="display:none">
+  <div class="section-title">Bridge (iframe)</div>
+  <div class="section-sub">Embeds the voting page. Votes submitted here are reflected instantly in the Live Votes tab above.</div>
+
+  <iframe
+    id="votingFrame"
+    src="ph_voting_platform.html"
+    style="width:100%;height:78vh;border:0;border-radius:14px;background:#fff"
+    aria-label="Voting app"
+  ></iframe>
+
+  <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+    <button class="login-btn" style="flex:1;min-width:220px" onclick="adminRender();showToast('✓ Refreshed')">Refresh admin</button>
+    <button class="login-btn" style="flex:1;min-width:220px;background:#0b2b4f" onclick="window.location.href='ph_voting_platform.html'">Open standalone</button>
+  </div>
+</div>
+
+<div class="section" id="sec-help" style="display:none">
+  <div class="section-title">How It Works</div>
+  <div class="section-sub">A plain-language guide to understanding and managing the VotePH system.</div>
+
+  <div class="hiw-callout">
+    <div class="hiw-callout-icon">✅</div>
+    <div class="hiw-callout-text">
+      <b>No internet or server required.</b> Everything runs locally inside your browser. Votes are stored on this computer and are instantly visible in this admin panel.
+    </div>
+  </div>
+
+  <div class="hiw-section-label">How voting works, step by step</div>
+
+  <div class="hiw-step">
+    <div class="hiw-icon">🗂️</div>
+    <div>
+      <div class="hiw-title">Step 1 — Voter opens the voting page</div>
+      <div class="hiw-desc">A voter goes to <b>ph_voting_platform.html</b> on the same computer or in another browser tab. This is the page they use to cast their vote.</div>
+    </div>
+  </div>
+
+  <div class="hiw-step">
+    <div class="hiw-icon">🔐</div>
+    <div>
+      <div class="hiw-title">Step 2 — Voter logs in with their Voter ID</div>
+      <div class="hiw-desc">
+        The system checks if that Voter ID has already voted. If it has, the voter is blocked and shown a message with the date and receipt of their earlier vote.
+        <b>Each Voter ID can only vote once.</b><br>
+        <span class="hiw-badge hiw-badge-green">Duplicate protection is automatic</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hiw-step">
+    <div class="hiw-icon">🗳️</div>
+    <div>
+      <div class="hiw-title">Step 3 — Voter selects candidates and submits</div>
+      <div class="hiw-desc">The voter picks up to <b>12 senators</b> and up to <b>3 party-list groups</b>, reviews their ballot, then clicks Submit. A unique receipt ID is generated for their records.</div>
+    </div>
+  </div>
+
+  <div class="hiw-step">
+    <div class="hiw-icon">💾</div>
+    <div>
+      <div class="hiw-title">Step 4 — Vote is saved to the browser</div>
+      <div class="hiw-desc">As soon as a vote is submitted, all vote tallies are saved to this browser's <b>local storage</b> — think of it like a small built-in database on your computer. No data is sent over the internet.</div>
+    </div>
+  </div>
+
+  <div class="hiw-step">
+    <div class="hiw-icon">📊</div>
+    <div>
+      <div class="hiw-title">Step 5 — Admin panel updates automatically</div>
+      <div class="hiw-desc">
+        This admin page reads from that same local storage. If a vote is submitted in another tab, this page detects it instantly and updates the tallies. It also re-checks every <b>5 seconds</b> as a backup.<br>
+        <span class="hiw-badge hiw-badge-blue">Auto-refresh every 5 seconds</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hiw-section-label">Things you can do as admin</div>
+
+  <div class="hiw-step">
+    <div class="hiw-icon">⬇️</div>
+    <div>
+      <div class="hiw-title">Export results to a spreadsheet</div>
+      <div class="hiw-desc">Click <b>Export votes.csv</b> on the Live Votes tab to download all vote counts for senators, party-list groups, and cities into a file you can open in Excel or Google Sheets.</div>
+    </div>
+  </div>
+
+  <div class="hiw-step">
+    <div class="hiw-icon">🖥️</div>
+    <div>
+      <div class="hiw-title">Watch voting happen in real time (Bridge tab)</div>
+      <div class="hiw-desc">The <b>Bridge tab</b> embeds the voting page directly inside this admin panel. You can watch or assist a voter while seeing tallies update live without switching tabs.</div>
+    </div>
+  </div>
+
+  <div class="hiw-step">
+    <div class="hiw-icon">🗑️</div>
+    <div>
+      <div class="hiw-title">Reset all votes</div>
+      <div class="hiw-desc">
+        The <b>Reset all votes</b> button permanently wipes all vote data. Use this only before starting a fresh election session — it cannot be undone.<br>
+        <span class="hiw-badge hiw-badge-red">Permanent — cannot be undone</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hiw-section-label">Important things to know</div>
+
+  <div class="hiw-callout hiw-callout-warn">
+    <div class="hiw-callout-icon">⚠️</div>
+    <div class="hiw-callout-text">
+      <b>Same browser, same computer only.</b> Votes cast on a different computer or a different browser (e.g. Chrome vs Firefox) will not appear here. All devices must use the same browser on the same machine.
+    </div>
+  </div>
+
+  <div class="hiw-callout hiw-callout-warn">
+    <div class="hiw-callout-icon">⚠️</div>
+    <div class="hiw-callout-text">
+      <b>Clearing browser data will delete all votes.</b> If anyone clears their browser history or site data, all vote records will be permanently lost. Avoid doing this during or after an election.
+    </div>
+  </div>
+
+  <div class="hiw-callout hiw-callout-red">
+    <div class="hiw-callout-icon">🚫</div>
+    <div class="hiw-callout-text">
+      <b>Do not use private/incognito mode</b> for voting. Incognito windows have separate storage and votes cast there will not be saved to the main admin tally.
+    </div>
+  </div>
+
+  <div class="hiw-section-label">Frequently asked questions</div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      What happens if the page is refreshed or the browser is closed?
+      <span class="faq-chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      All votes are saved automatically after each submission. Refreshing or closing the browser will not lose any votes. When the page reopens, it reads from saved data and displays everything correctly.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      Can someone vote more than once?
+      <span class="faq-chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      No. Once a Voter ID is used to submit a ballot, the system records it. Any future login attempt with the same Voter ID will be blocked with a message showing when and with what receipt they already voted.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      How do I know the vote count is accurate?
+      <span class="faq-chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      The "Unique Voters" count shows how many individual Voter IDs have submitted ballots. The "Total Ballots Cast" shows the total number of individual candidate selections made. You can export the CSV at any time to verify the numbers in a spreadsheet.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      Why are the numbers on the voting page and the admin page the same?
+      <span class="faq-chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      Both pages read from the exact same saved data on this browser. There is only one source of truth, so the numbers will always match.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <button class="faq-q" onclick="toggleFaq(this)">
+      What does "Export votes.csv" give me?
+      <span class="faq-chevron">▼</span>
+    </button>
+    <div class="faq-a">
+      It downloads a spreadsheet file with every candidate's name, party, and total votes — separated into Senate, Party-List, and City sections. You can open this in Microsoft Excel, Google Sheets, or any spreadsheet app for official record-keeping.
+    </div>
+  </div>
+
+</div>
+
+<script>
+function parseSnapshot() {
+  try {
+    const ls = localStorage.getItem('voteph_snapshot');
+    if (ls) return JSON.parse(ls);
+    return null;
+  } catch (e) { return null; }
+}
+
+function getInitials(name) {
+  return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+}
+
+function resultAvatarHTML(c, color) {
+  color = color || '#0d3b66';
+  const ini = getInitials(c.name);
+  if (c.image) {
+    return `<div class="result-avatar" style="background:${color}"><img src="${c.image}" alt="${c.name}" onerror="this.style.display='none';this.parentElement.textContent='${ini}'"></div>`;
+  }
+  return `<div class="result-avatar" style="background:${color}">${ini}</div>`;
+}
+
+function adminRender() {
+  const snap      = parseSnapshot();
+  const uniqueEl  = document.getElementById('admin-unique');
+  const totalEl   = document.getElementById('admin-total');
+  const lastEl    = document.getElementById('last-updated');
+
+  lastEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+  if (!snap || !snap.meta) {
+    uniqueEl.textContent = '0';
+    totalEl.textContent  = '0';
+    const emptyHTML = `
+      <div class="empty-state">
+        <div class="icon">🗳️</div>
+        <p>No votes yet.</p>
+        <small>Submit a vote in the voting page — it will appear here automatically.</small>
+      </div>`;
+    document.getElementById('admin-results-senate').innerHTML = emptyHTML;
+    document.getElementById('admin-results-house').innerHTML  = '';
+    document.getElementById('admin-results-city').innerHTML   = '';
+    return;
+  }
+
+  uniqueEl.textContent = (snap.meta.uniqueVoters || 0).toLocaleString();
+  totalEl.textContent  = (snap.meta.totalVotes   || 0).toLocaleString();
+
+  const senateVotes = snap.senateVotes || {};
+  const houseVotes  = snap.houseVotes  || {};
+  const cityVotes   = snap.cityVotes   || {};
+  const senators    = snap.senators    || [];
+  const houseReps   = snap.houseReps   || [];
+
+  const sortedSen = [...senators].sort((a, b) => (senateVotes[b.id] || 0) - (senateVotes[a.id] || 0));
+  const maxSen    = sortedSen.length ? (senateVotes[sortedSen[0].id] || 0) : 0;
+
+  document.getElementById('admin-results-senate').innerHTML = sortedSen.map((c, i) => {
+    const v = senateVotes[c.id] || 0;
+    return `
+      <div class="result-section" style="margin-bottom:10px">
+        <div class="result-header">
+          ${resultAvatarHTML(c, '#0d3b66')}
+          <div style="flex:1">
+            <div class="result-name">${c.name} ${i < 12 && v > 0 ? '<span class="winner-badge">🏆</span>' : ''}</div>
+            <div class="result-sub">${c.party || ''}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:16px;font-weight:600;color:#0d3b66">${v.toLocaleString()}</div>
+            <div style="font-size:11px;color:var(--color-text-secondary)">votes</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${maxSen > 0 ? Math.round(v / maxSen * 100) : 0}%"></div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const sortedHouse = [...houseReps].sort((a, b) => (houseVotes[b.id] || 0) - (houseVotes[a.id] || 0));
+  const maxHouse    = sortedHouse.length ? (houseVotes[sortedHouse[0].id] || 0) : 0;
+
+  document.getElementById('admin-results-house').innerHTML = sortedHouse.map((c, i) => {
+    const v = houseVotes[c.id] || 0;
+    return `
+      <div class="result-section" style="margin-bottom:10px">
+        <div class="result-header">
+          ${resultAvatarHTML(c, '#92400e')}
+          <div style="flex:1">
+            <div class="result-name">${c.name} ${i < 3 && v > 0 ? '<span class="winner-badge" style="background:#fef3c7;color:#92400e">🏛️</span>' : ''}</div>
+            <div class="result-sub">Party-List</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:16px;font-weight:600;color:#92400e">${v.toLocaleString()}</div>
+            <div style="font-size:11px;color:var(--color-text-secondary)">votes</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-track">
+            <div class="bar-fill" style="width:${maxHouse > 0 ? Math.round(v / maxHouse * 100) : 0}%;background:#92400e"></div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  const entries = Object.entries(cityVotes).sort((a, b) => b[1] - a[1]);
+
+  document.getElementById('admin-results-city').innerHTML = `
+    <div class="result-section">
+      <div style="font-size:15px;font-weight:500;margin-bottom:1rem;color:var(--color-text-primary)">Votes by City/Municipality</div>
+      ${entries.map(([city, v], i) => `
+        <div class="city-result">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:12px;color:var(--color-text-secondary);width:20px">${i + 1}.</span>
+            <span class="city-name">${city}</span>
+          </div>
+          <span class="city-votes">${v.toLocaleString()} votes</span>
+        </div>`).join('')}
+      <div style="margin-top:1rem;padding-top:1rem;border-top:.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;font-size:14px">
+        <span style="color:var(--color-text-secondary)">Total</span>
+        <span style="font-weight:600;color:#0d3b66">${Object.values(cityVotes).reduce((a, b) => a + b, 0).toLocaleString()} votes</span>
+      </div>
+    </div>`;
+}
+
+function downloadCSV() {
+  const snap = parseSnapshot();
+  if (!snap || !snap.meta || snap.meta.totalVotes === 0) {
+    showToast('No votes yet. Cast a vote first.');
+    return;
+  }
+
+  const senators    = snap.senators    || [];
+  const houseReps   = snap.houseReps   || [];
+  const senateVotes = snap.senateVotes || {};
+  const houseVotes  = snap.houseVotes  || {};
+  const cityVotes   = snap.cityVotes   || {};
+
+  const esc  = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const rows = [['Section', 'ID', 'Name', 'Party/Group', 'Votes'].map(esc).join(',')];
+
+  senators.forEach(c  => rows.push(['Senate',          'Senator',    c.id, c.name, c.party || '', senateVotes[c.id] || 0].map(esc).join(',')));
+  houseReps.forEach(c => rows.push(['House Party-List', 'Party-List', c.id, c.name, '',           houseVotes[c.id]  || 0].map(esc).join(',')));
+  Object.entries(cityVotes).forEach(([city, v]) => rows.push(['City/Municipality', '', city, '', '', v || 0].map(esc).join(',')));
+
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = 'votes.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  showToast('✓ Downloaded votes.csv');
+}
+
+function showSection(id, btn) {
+  ['sec-votes', 'sec-bridge', 'sec-help'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? 'block' : 'none';
+  });
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function adminSwitchTab(btn, tabId) {
+  document.querySelectorAll('.tab-pill').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  ['admin-senate', 'admin-house', 'admin-city'].forEach(id => {
+    document.getElementById(id).style.display = id === tabId ? 'block' : 'none';
+  });
+}
+
+function resetSession() {
+  if (!confirm('Clear all vote data? This cannot be undone.')) return;
+  localStorage.removeItem('voteph_snapshot');
+  adminRender();
+  showToast('✓ All votes cleared');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function toggleFaq(btn) {
+  const answer  = btn.nextElementSibling;
+  const chevron = btn.querySelector('.faq-chevron');
+  const isOpen  = answer.classList.contains('open');
+  answer.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+}
+
+window.addEventListener('storage', e => {
+  if (e.key === 'voteph_snapshot') {
+    adminRender();
+    showToast('🔄 New vote received!');
+  }
+});
+
+adminRender();
+setInterval(adminRender, 5000);
+</script>
+
+</body>
+</html>
